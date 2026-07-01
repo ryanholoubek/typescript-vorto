@@ -1,179 +1,190 @@
 import * as fs from 'fs';
 
-let file:string="";
-let totalDayDriveMinutes:number = 12*60;
-let addToTotalMinutes:number = 0;
-let driverJobArray= new Array<any>();
-let currentJobArray= new Array<Number>();
-let arrayCounter:number = 0;
+const totalDayDriveMinutes: number = 12 * 60;
+
+interface Job {
+    id: number;
+    pickup: [number, number];
+    dropoff: [number, number];
+}
+
+let file: string = '';
 
 //get all the arguments passed into the program
-process.argv.forEach(function (val, index, array) {
-    
+process.argv.forEach(function (val) {
     file = val;
 });
 
-
 fs.readFile(file, 'utf8', function (err, data) {
-    // Display the file content
     if (err) {
         if (err.code === 'ENOENT') {
-          console.error('File not found:', err.path);
+            console.error('File not found:', err.path);
         } else {
-          console.error('Error reading file:', err);
+            console.error('Error reading file:', err);
         }
         return;
-      }
-    //console.log('File content:', data);
-    //seperate by line
-    var array = data.toString().split("\n");
-    parseFile(array);
-    
-    buildRoutes();
-     
+    }
+
+    const lines = data.toString().split('\n');
+    const jobs = parseFile(lines);
+    const routes = buildRoutes(jobs);
+
+    for (const route of routes) {
+        process.stdout.write('[' + route.toString() + ']\n');
+    }
 });
 
 /*
-    This function adds the minutes current driver and sets up a new driver
+    This function calculates the distance (in minutes) between two points
 */
-function addNewDriverReset(minutes:number){
-    addMinutesForTotalTrip(minutes);
-    //console.log("Total Minutes : " + addToTotalMinutes);
-    if(currentJobArray.length > 0){
-        process.stdout.write("[" + currentJobArray.toString() + "]\n" );
+function calculateMinutes(x1: number, y1: number, x2: number, y2: number): number {
+    const dx = x1 - x2;
+    const dy = y1 - y2;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+/*
+    This helper function parses a "(x,y)" string into a coordinate pair
+*/
+function parseCoordinate(str: string): [number, number] {
+    const parts = str.replace('(', '').replace(')', '').split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1])];
+}
+
+/*
+    This function parses the data from the file passed in into a list of jobs
+*/
+function parseFile(lines: string[]): Job[] {
+    const jobs: Job[] = [];
+    const startsWithDigit = /^\d/;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!startsWithDigit.test(trimmed)) {
+            continue;
+        }
+
+        const [idPart, pickupPart, dropoffPart] = trimmed.split(/\s+/);
+        jobs.push({
+            id: parseInt(idPart, 10),
+            pickup: parseCoordinate(pickupPart),
+            dropoff: parseCoordinate(dropoffPart),
+        });
     }
-   
-    arrayCounter = 0;
-    addToTotalMinutes = 0;
-    currentJobArray = new Array<Number>();
+
+    return jobs;
 }
 
 /*
-    This function adds minutes to the current driver 
+    This function returns the total drive time (in minutes) for a driver
+    that starts at the depot, runs the given jobs in order, and returns home
 */
-function addMinutesForTotalTrip(minutes:number){
-    addToTotalMinutes = addToTotalMinutes + minutes;
-    //console.log("Total Minutes : " + addToTotalMinutes);
-    return;
-}
+function scheduleMinutes(route: number[], jobById: Map<number, Job>): number {
+    let minutes = 0;
+    let position: [number, number] = [0, 0];
 
-/*
-    This function the minutes between two points
-*/
-function calculateMinutes(x1: number, y1 : number, x2: number, y2: number): number {
-
-    let calculateX:number = x1 - x2;//(x2-x1)^2;
-    let calculateY:number = y1 - y2;//(y2-y1)^2;
-    let addTogether = ((calculateX * calculateX)  + (calculateY * calculateY));
-
-    const minutes:number =  Math.sqrt(addTogether);
-    
-    return minutes
-    
-}
-
-/*
-    This helper function remove commas from the string and extracts the number
-*/
-function removeComma(str: string): number[] {
-    let arr = new Array<number>();
-    var partsOfStr = str.split(',');
-    
-    let x = parseFloat(partsOfStr[0]);
-    let y = parseFloat(partsOfStr[1]);
-    
-    arr.push(x)
-    arr.push(y)
-    return arr
-    
-}
-
-/*
-    This function parses the data from the file passed in and puts it into an array of an array
-*/
-function parseFile(arr: string[]){
-    
-    for(const i in arr) {     
-
-        const regex = /\d/;
-        const regex2 = /\(([^\)]+)\)/;
-
-        // Check if string contians numbers
-        const doesItHaveNumber = regex.test(arr[i]);
-        
-        if(doesItHaveNumber){
-
-            const str = arr[i];
-            
-            //gets number
-            const arrayOfJobs = str.slice(0, 3).split('(');
-            //get contents of inside the parenthensis 
-            const jobsString = str.split('(');
-            
-            let arrayOfArray = new Array();
-            arrayOfArray.push(parseInt(arrayOfJobs[0]));
-            arrayOfArray.push(jobsString[1]);
-            arrayOfArray.push(jobsString[2]);
-            driverJobArray.push(arrayOfArray);
-        
-        }
+    for (const id of route) {
+        const job = jobById.get(id)!;
+        minutes += calculateMinutes(position[0], position[1], job.pickup[0], job.pickup[1]);
+        minutes += calculateMinutes(job.pickup[0], job.pickup[1], job.dropoff[0], job.dropoff[1]);
+        position = job.dropoff;
     }
+
+    minutes += calculateMinutes(position[0], position[1], 0, 0);
+    return minutes;
 }
 
-
 /*
-    This function builds routes for each driver at the maximum time to produce the lowest costs
+    This function attempts to merge routes together (in either order) whenever
+    the combined route still fits within the daily drive time budget, reducing
+    the number of drivers needed since each driver adds a large fixed cost
 */
-function buildRoutes(){
+function mergeRoutes(routes: number[][], jobById: Map<number, Job>): void {
+    let merged = true;
 
-    let lastDropOff = new Array<number>();
-    let lastMinutesHome: number = 0;
-    for(const i in driverJobArray){   
-        let pickup = new Array<number>();
-        let dropOff = new Array<number>();
-        let minutesForTrip: number = 0;
-        let minutesHome: number = 0;
-        let minutesBetweenJobs: number = 0;
-        
-        pickup = removeComma(driverJobArray[i][1]);
-        dropOff = removeComma(driverJobArray[i][2]);
+    while (merged) {
+        merged = false;
 
-        //new driver add from home depot
-        if(arrayCounter == 0){
-            addMinutesForTotalTrip(calculateMinutes(0,0,pickup[0], pickup[1] ));
-        }
-        if(lastDropOff != undefined){
-            minutesBetweenJobs= calculateMinutes(lastDropOff[0],lastDropOff[1],pickup[0], pickup[1] );
-        }
-        
-        minutesForTrip = calculateMinutes(pickup[0],pickup[1],dropOff[0], dropOff[1] );
-        minutesHome = calculateMinutes(dropOff[0],dropOff[1],0, 0 );
-        let currentTotalMinutes = addToTotalMinutes + minutesBetweenJobs +  minutesForTrip + minutesHome;
-        
-        //current trip is below our daily total so we can add the trip
-        if(currentTotalMinutes <  totalDayDriveMinutes){
-            addMinutesForTotalTrip(minutesBetweenJobs + minutesForTrip); 
-        }else{
-            //add new driver starting from the home depot
-            addNewDriverReset(lastMinutesHome);
-            addMinutesForTotalTrip(calculateMinutes(0,0,pickup[0], pickup[1] ));
-            addMinutesForTotalTrip(minutesForTrip);            
-        }
+        for (let i = 0; i < routes.length && !merged; i++) {
+            for (let j = i + 1; j < routes.length && !merged; j++) {
+                const forward = routes[i].concat(routes[j]);
+                const backward = routes[j].concat(routes[i]);
 
-        currentJobArray.push(driverJobArray[i][0]);
+                const forwardMinutes = scheduleMinutes(forward, jobById);
+                const backwardMinutes = scheduleMinutes(backward, jobById);
 
-        //if we are at the end of the file clean up and log
-        if(driverJobArray.length == driverJobArray[i][0]){            
-            addMinutesForTotalTrip(minutesForTrip); 
-            if(currentJobArray.length > 0){
-                process.stdout.write("[" + currentJobArray.toString() + "]\n" );
+                const best = forwardMinutes <= backwardMinutes ? forward : backward;
+                const bestMinutes = Math.min(forwardMinutes, backwardMinutes);
+
+                if (bestMinutes <= totalDayDriveMinutes) {
+                    routes[i] = best;
+                    routes.splice(j, 1);
+                    merged = true;
+                }
             }
         }
-
-        
-        lastMinutesHome = minutesHome
-        lastDropOff = dropOff;
-        arrayCounter++;
-    }  
+    }
 }
 
+/*
+    This function builds routes for each driver by greedily picking, at each
+    step, the nearest remaining job that still fits within that driver's
+    remaining daily drive time. Once no remaining job fits, a new driver
+    starts from the depot. A merge pass then tries to combine routes to
+    further reduce the number of drivers needed.
+*/
+function buildRoutes(jobs: Job[]): number[][] {
+    const jobById = new Map<number, Job>(jobs.map((job) => [job.id, job]));
+    const remaining = new Set(jobs.map((_, index) => index));
+    const routes: number[][] = [];
+
+    while (remaining.size > 0) {
+        const route: number[] = [];
+        let position: [number, number] = [0, 0];
+        let minutesUsed = 0;
+
+        while (true) {
+            let bestIndex = -1;
+            let bestDistanceToPickup = Infinity;
+
+            for (const index of remaining) {
+                const job = jobs[index];
+                const toPickup = calculateMinutes(position[0], position[1], job.pickup[0], job.pickup[1]);
+                const tripMinutes = calculateMinutes(job.pickup[0], job.pickup[1], job.dropoff[0], job.dropoff[1]);
+                const homeMinutes = calculateMinutes(job.dropoff[0], job.dropoff[1], 0, 0);
+                const totalIfAssigned = minutesUsed + toPickup + tripMinutes + homeMinutes;
+
+                if (totalIfAssigned <= totalDayDriveMinutes && toPickup < bestDistanceToPickup) {
+                    bestDistanceToPickup = toPickup;
+                    bestIndex = index;
+                }
+            }
+
+            if (bestIndex === -1) {
+                break;
+            }
+
+            const job = jobs[bestIndex];
+            const toPickup = calculateMinutes(position[0], position[1], job.pickup[0], job.pickup[1]);
+            const tripMinutes = calculateMinutes(job.pickup[0], job.pickup[1], job.dropoff[0], job.dropoff[1]);
+
+            minutesUsed += toPickup + tripMinutes;
+            position = job.dropoff;
+            route.push(job.id);
+            remaining.delete(bestIndex);
+        }
+
+        if (route.length === 0) {
+            // Safety valve: a lone job's home-to-home trip exceeds the daily budget by itself.
+            const [index] = remaining;
+            route.push(jobs[index].id);
+            remaining.delete(index);
+        }
+
+        routes.push(route);
+    }
+
+    mergeRoutes(routes, jobById);
+
+    return routes;
+}
