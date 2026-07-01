@@ -10,106 +10,106 @@ Soution Output:
 
     problem17.txt
         running...
-        run time: 2.4947428703308105 s
+        run time: 2.354428291320801 s
         evaluating solution...
-        cost: 84962.34889303904
+        cost: 39149.25420769292
     problem16.txt
             running...
-            run time: 2.221951961517334 s
+            run time: 2.409860849380493 s
             evaluating solution...
-            cost: 82463.43424742014
+            cost: 39133.64107727873
     problem14.txt
             running...
-            run time: 2.2105278968811035 s
+            run time: 2.319783926010132 s
             evaluating solution...
-            cost: 79045.14748832345
+            cost: 32021.175145780875
     problem15.txt
             running...
-            run time: 2.2239749431610107 s
+            run time: 2.3335719108581543 s
             evaluating solution...
-            cost: 91999.43103785845
+            cost: 37808.80682442998
     problem11.txt
             running...
-            run time: 2.143422842025757 s
+            run time: 2.380324125289917 s
             evaluating solution...
-            cost: 125133.12918832892
+            cost: 58890.55100868591
     problem10.txt
             running...
-            run time: 2.135464906692505 s
+            run time: 2.333946943283081 s
             evaluating solution...
-            cost: 117923.95613797064
+            cost: 55206.51115479412
     problem12.txt
             running...
-            run time: 2.242008924484253 s
+            run time: 2.373960256576538 s
             evaluating solution...
-            cost: 155909.0899887809
+            cost: 82931.64786891037
     problem13.txt
             running...
-            run time: 2.2304880619049072 s
+            run time: 2.347827911376953 s
             evaluating solution...
-            cost: 159774.16374009312
+            cost: 91500.15707664515
     problem9.txt
             running...
-            run time: 2.202371835708618 s
+            run time: 2.365532875061035 s
             evaluating solution...
-            cost: 120872.54426237987
+            cost: 51791.62661582614
     problem8.txt
             running...
-            run time: 2.270397901535034 s
+            run time: 2.3475871086120605 s
             evaluating solution...
-            cost: 53252.52055105749
+            cost: 38365.78756383047
     problem3.txt
             running...
-            run time: 4.342542886734009 s
+            run time: 2.373929023742676 s
             evaluating solution...
-            cost: 53985.77638857004
+            cost: 34708.90992424688
     problem2.txt
             running...
-            run time: 2.2601850032806396 s
+            run time: 2.3516080379486084 s
             evaluating solution...
-            cost: 30856.796505581064
+            cost: 21484.806515475502
     problem1.txt
             running...
-            run time: 2.1707241535186768 s
+            run time: 2.368298053741455 s
             evaluating solution...
-            cost: 6179.562661544849
+            cost: 5307.534616920443
     problem5.txt
             running...
-            run time: 2.2158498764038086 s
+            run time: 2.376621961593628 s
             evaluating solution...
-            cost: 50011.650353664096
+            cost: 20431.410761772022
     problem4.txt
             running...
-            run time: 2.2720508575439453 s
+            run time: 2.4170420169830322 s
             evaluating solution...
-            cost: 112665.41403782796
+            cost: 74034.07990162159
     problem6.txt
             running...
-            run time: 2.2388899326324463 s
+            run time: 2.38264799118042 s
             evaluating solution...
-            cost: 46832.75031215818
+            cost: 19120.075468812345
     problem7.txt
             running...
-            run time: 2.2823269367218018 s
+            run time: 2.4836440086364746 s
             evaluating solution...
-            cost: 54546.57313472175
+            cost: 40086.012373982536
     problem20.txt
             running...
-            run time: 2.203031063079834 s
+            run time: 2.5188119411468506 s
             evaluating solution...
-            cost: 105515.7478326597
+            cost: 57794.47806474166
     problem18.txt
             running...
-            run time: 2.2541120052337646 s
+            run time: 2.408329963684082 s
             evaluating solution...
-            cost: 137876.04877276474
+            cost: 74756.3120879529
     problem19.txt
             running...
-            run time: 2.2094719409942627 s
+            run time: 2.4447901248931885 s
             evaluating solution...
-            cost: 132966.77422727994
-    mean cost: 90138.6429881012
-    mean run time: 2341.226840019226ms
+            cost: 80141.65601485048
+    mean cost: 47733.221713712555
+    mean run time: 2384.627366065979ms
 
 
 
